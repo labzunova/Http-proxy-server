@@ -1,34 +1,36 @@
-FROM golang:1.13-stretch AS builder
-
+FROM golang:1.15 AS builder
 WORKDIR /build
 COPY . .
+RUN go build main.go
+FROM ubuntu:20.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install postgresql-12 -y
+USER postgres
+COPY ./tables.sql .
+RUN service postgresql start && \
+        psql -c "CREATE USER labzunova WITH superuser login password '1111';" && \
+        psql -c "ALTER ROLE labzunova WITH PASSWORD '1111';" && \
+        createdb -O labzunova proxy && \
+        psql -d proxy < ./tables.sql && \
+        service postgresql stop
+
+VOLUME ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 USER root
-RUN go build main.go
 
-FROM ubuntu:20.04
+WORKDIR /proxy
+COPY --from=builder /build/main .
+
 COPY . .
 
-EXPOSE 5432
 EXPOSE 8080
+EXPOSE 8000
+EXPOSE 5432
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get -y update && apt -y install postgresql-12
+ENV PROXY_PORT=8080
+ENV REPEATER_PORT=8000
+ENV DB_USER=proxyuser
+ENV DB_NAME=Requests
 
-USER postgres
-
-RUN  /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER postgres WITH SUPERUSER PASSWORD 'password';" &&\
-    createdb -O postgres postgres &&\
-    psql -f tables.sql -d postgres &&\
-    /etc/init.d/postgresql stop
-
-
-#RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/12/main/pg_hba.conf
-#RUN echo "listen_addresses='*'" >> /etc/postgresql/12/main/postgresql.conf
-#
-#VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
-#
-#USER root
-#COPY --from=builder  /build/main /usr/bin
-#CMD /etc/init.d/postgresql start && main
+CMD service postgresql start && ./main

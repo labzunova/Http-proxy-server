@@ -5,8 +5,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"proxy/proxy.go/repository"
 	"strings"
+
+	"proxy/proxy.go/repository"
 )
 
 func ConvertHttpToRequest(r *http.Request) (repository.Request, error) {

@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"proxy/proxy.go/utils"
@@ -13,6 +14,7 @@ type HttpProxy struct {
 }
 
 func (p *HttpProxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("handler")
 	if req.Method == http.MethodConnect {
 		serveHTTPs(w, req)
 		return
@@ -30,6 +32,7 @@ func (p *HttpProxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func serveHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("serve http")
 	client := http.Client{}
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		return http.ErrUseLastResponse

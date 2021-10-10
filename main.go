@@ -17,7 +17,7 @@ import (
 func initDB() *sql.DB {
 	// подключение postgres
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", "127.0.0.1", "5432",
-		"labzunova", "1111", "postgres")
+		"labzunova", "1111", "proxy")
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatal(err)
@@ -54,12 +54,11 @@ func main() {
 
 	// web-api starting
 	apiHandler := &requestsApi.WebApi{Repo: repo}
-
 	mux := mux.NewRouter()
 	mux.HandleFunc("/requests", apiHandler.HandleReturnAllRequests)
 	mux.HandleFunc("/request/{id}", apiHandler.HandleOneRequest)
 	mux.HandleFunc("/repeat/{id}", apiHandler.HandleRepeatRequest)
-	//mux.HandleFunc("/scan/{id}", apiHandler.HandleScanRequest)
+	mux.HandleFunc("/scan/{id}", apiHandler.HandleScanRequest)
 
 	log.Println("web api is starting, :8000")
 	log.Fatal(http.ListenAndServe(":8000", mux))

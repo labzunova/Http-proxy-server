@@ -98,5 +98,22 @@ func (p *WebApi) HandleRepeatRequest(w http.ResponseWriter, req *http.Request) {
 }
 
 func (p *WebApi) HandleScanRequest(w http.ResponseWriter, req *http.Request) {
+	idString, ok := mux.Vars(req)["id"]
+	if !ok {
+		http.Error(w, "can't get ID", http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		http.Error(w, "can't convert ID into int", http.StatusBadRequest)
+		return
+	}
 
+	requestParams, err := p.Repo.LoadOneRequest(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	utils.CheckXSS(w, requestParams)
 }
